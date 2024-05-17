@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MongoDB Lab 4</title>
+    <style>
+      * {
+        margin: 0px;
+        padding: 0px;
+        box-sizing: border-box;
+      }
+
+      body {
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        background-color: #0028ad7e;
+        min-width: 23rem;
+      }
+
+      body > form {
+        background-color: inherit;
+        padding: 1rem;
+        width: min(75%, 750px);
+        color: white;
+        border: 2px solid white;
+        border-radius: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      body > form > div:first-child {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-size: 1.5rem;
+      }
+
+      body > form > div > button {
+        min-width: max-content;
+      }
+
+      @media (max-width: 600px) {
+        body > form {
+          width: 100%;
+        }
+      }
+
+      button {
+        padding: 10px 30px;
+        font-size: 1.5em;
+        text-shadow: 2px 2px 4px #000000;
+        background-color: green;
+        color: white;
+        border: none;
+        border-radius: 10px;
+      }
+      button:hover {
+        cursor: pointer;
+        background-color: rgb(59, 141, 59);
+      }
+
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      th,
+      td {
+        padding: 10px 20px;
+        border: 1px solid rgb(133, 132, 132);
+      }
+
+      th {
+        background-color: #0026a1;
+        font-size: 1.5rem;
+        text-shadow: 2px 2px 4px #000000;
+      }
+
+      tr:nth-child(2n) {
+        background-color: rgb(109, 109, 109);
+      }
+
+      @keyframes loading {
+        0% {
+          opacity: 0.25;
+        }
+
+        25% {
+          opacity: 0.25;
+        }
+
+        50% {
+          opacity: 0.5;
+        }
+
+        75% {
+          opacity: 0.75;
+        }
+
+        100% {
+          opacity: 1;
+        }
+      }
+      #loading {
+        display: none;
+        color: #ff7300;
+        font-size: 1.5rem;
+        font-weight: bold;
+        animation: loading 0.5s infinite;
+        justify-self: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <form>
+      <div>
+        <input type="number" name="year" id="year" />
+        <button>Get Data</button>
+      </div>
+      <div id="loading"></div>
+      <div id="table_div"></div>
+    </form>
+    <script>
+      const btn = document.querySelector("button");
+      const table_div = document.querySelector("#table_div");
+      const loading = document.querySelector("#loading");
+      let table = document.createElement("table");
+      let thead = document.createElement("thead");
+      let tbody = document.createElement("tbody");
+      table.appendChild(thead);
+      table.appendChild(tbody);
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        loading.style.display = "block";
+        loading.innerHTML = "Loading Data..";
+        var data = new FormData();
+        data.append(
+          "year",
+          document.getElementById("year").value.toString().substring(0, 4)
+        );
+        fetch("first.php", { method: "POST", body: data })
+          .then((res) => res.json())
+          .then((data) => {
+            removeAllChildNodes(thead);
+            removeAllChildNodes(tbody);
+            if (!data.hasOwnProperty("status")) {
+              makeTableHeader(["Year", "Title"]);
+              data.forEach((element) => {
+                makeTableDataRow([element.year, element.title]);
+              });
+              table_div.appendChild(table);
+            } else {
+              loading.innerHTML = "No Data return from collection";
+            }
+          })
+          .finally(() => {
+            if (loading.innerHTML == "Loading Data..") {
+              loading.style.display = "none";
+            }
+          });
+      });
+      /*
+    This function accepts an array of the column headings
+    and create a row to be added to the table in with the 
+    column heading
+    */
+      function makeTableHeader(coloumns) {
+        let header_row = document.createElement("tr");
+        coloumns.forEach((item) => {
+          let heading = document.createElement("th");
+          heading.innerHTML = item;
+          header_row.appendChild(heading);
+        });
+        thead.appendChild(header_row);
+      }
+      /*
+        This function accepts an array of the row data
+        and create a row to be added to the table in with the 
+        record data
+        */
+      function makeTableDataRow(row_data) {
+        let data_row = document.createElement("tr");
+        row_data.forEach((item) => {
+          let row = document.createElement("td");
+          row.innerHTML = item;
+          data_row.appendChild(row);
+        });
+        tbody.appendChild(data_row);
+      }
+      /*
+        This function accepts a html element and it removes all children
+        that are in the element
+        */
+      function removeAllChildNodes(parent) {
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+      }
+    </script>
+  </body>
+</html>

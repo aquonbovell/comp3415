@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" type="text/css" href="css/mystyle.css">
+	<script src="https://kit.fontawesome.com/d2d2d866bf.js" crossorigin="anonymous"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	<title>Total Sales by Date</title>
+	<style>
+		.modal-content th,
+		.modal-content td {
+			border: 1px solid transparent;
+			border-collapse: collapse;
+
+		}
+
+		.modal-content thead th,
+		.modal-content thead td {
+			border-top: none;
+			background-color: rgb(108, 108, 108);
+			color: white;
+		}
+	</style>
+</head>
+
+<body>
+	<main>
+		<img src="img/uwi.png">
+		<div id="title">
+			<div>
+				<i class="fa-regular fa-chart-bar"></i>
+				<label>Total sales by date</label>
+			</div>
+			<div class="help-modal">
+				<i class="fa-solid fa-circle-info"></i>
+				<div class="help">
+					This screen is used to display all the sales that falls between specified dates.
+				</div>
+			</div>
+		</div>
+		<div class="menu">
+			<div class="menu_fixed">
+				<ul>
+					<li><a href="product.html"><i class="fa-solid fa-pen-to-square"></i>&nbsp;&nbsp;Product Data Entry
+							Screen</a></li>
+					<li><a href="pos.html"><i class="fa-sharp fa-solid fa-cash-register"></i>&nbsp;&nbsp;Point of Sale
+							Screen</a></li>
+					<li><a href="product_by_vendor.html"><i class="fa-solid fa-list"></i>&nbsp;&nbsp;Product by Vendor
+							Search</a></li>
+					<li><a href="product_price_range.html"><i class="fa-solid fa-sliders"></i>&nbsp;&nbsp;Product Price
+							Range Search</a></li>
+					<li><a href="sales_by_product.html"><i class="fa-solid fa-sitemap"></i>&nbsp;&nbsp;Sales of Specific
+							Product</a></li>
+					<li><a href="total_sales_by_date.html" class="shown"><i
+								class="fa-regular fa-chart-bar"></i>&nbsp;&nbsp;Total Sales by Date</a></li>
+					<li><a href="product_sold_on_date.html"><i class="fa-solid fa-bezier-curve"></i>&nbsp;&nbsp;Products
+							Sold on Date</a></li>
+					<li><a href="best_selling_products.html"><i class="fa-solid fa-recycle"></i>&nbsp;&nbsp;Best Selling
+							Products</a></li>
+					<li><a href="other_products_sold.html"><i class="fa-solid fa-right-left"></i>&nbsp;&nbsp;Other
+							Products Sold With</a></li>
+				</ul>
+			</div>
+
+		</div>
+		<div class="container">
+			<div class="row range">
+				<div class="inner_range">
+					<div>
+						<label for="start">Start Date:</label>
+						<input type="date" id="start" name="start" autofocus>
+					</div>
+					<div>
+						<label for="finish">Finish Date:</label>
+						<input type="date" id="finish" name="finish" placeholder="yyyy-mm-dd">
+					</div>
+					<div>
+						<input type="button" value="Search" onclick="getSaleByDate(1)">
+					</div>
+				</div>
+
+				<div class="page_no" id="page_no"></div>
+			</div>
+			<div class="row">
+				<div id="mytable"></div>
+			</div>
+			<div class="row">
+				<div>
+					<div id="paging"></div>
+				</div>
+			</div>
+		</div>
+	</main>
+	<div class="modal">
+		<div class="modal-content">
+			<div id="close">X</div>
+			<div id="thedate"></div>
+			<div>
+				<div id="trans_table"></div>
+			</div>
+		</div>
+	</div>
+	<script>
+		const table_div = document.querySelector("#mytable")
+		let table = document.createElement('table');
+		let thead = document.createElement('thead');
+		let tbody = document.createElement('tbody');
+		table.appendChild(thead);
+		table.appendChild(tbody);
+		var limit = 20;
+		function getSaleByDate(page) {
+			var start = document.getElementById('start').value;
+			var finish = document.getElementById('finish').value;
+			let formData = new FormData()
+			formData.append('start', start)
+			formData.append('finish', finish)
+			formData.append('page', page)
+			formData.append('limit', limit)
+			fetch("php/total_sales_by_date.php", {
+				method: 'post',
+				body: formData
+			}).then((res) => res.json())
+				.then((results) => {
+					removeAllChildNodes(thead)
+					removeAllChildNodes(tbody)
+					if (!results.hasOwnProperty("status")) {
+						makeTableHeader(["Sales Date", "Sales Total", "No. of Trans.", "Avg per Trans.", "View"])
+						results.forEach((element) => {
+							let saleDate = new Date(element.date).toLocaleDateString('en-US',{
+								timeZone: 'UTC',
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric'
+							})
+							makeTableDataRow([saleDate, element.amt, element.counter, element.avgAmt, '*'])
+						});
+						table_div.appendChild(table)
+						paging(page);
+					}
+				})
+		}
+		function paging(page) {
+			if (isNaN(page)) {
+				page = 1;
+			}
+			let next = (parseInt(page) + 1);
+			let prev = ((parseInt(page) - 1) < 1) ? 1 : (parseInt(page) - 1)
+			let range = 10; // number of pages to display in the navigation bar	
+			let start_movement = 7; //starts shifting page numbers in navigation bar after this amount
+			let start_offset = Math.ceil(range / 2); //start point of navigation bar from current page	
+			let start = document.getElementById('start').value;
+			let finish = document.getElementById('finish').value;
+			let formData = new FormData()
+			formData.append('start', start)
+			formData.append('finish', finish)
+			fetch("php/total_sales_by_date_count.php", {
+				method: 'post',
+				body: formData
+			}).then((res) => res.json())
+				.then((results) => {
+					if (results.hasOwnProperty("status")) {
+						return
+					}
+					let total_num_pages = Math.ceil(results.total / limit)
+					document.getElementById("page_no").innerHTML = `Page ${page} of ${total_num_pages}`
+					let page_string = '';
+					page_string = "<div class='pagination'>"
+					if (page >= start_movement) {
+						start = page - start_offset
+					}
+					else {
+						start = 1;
+					}
+					let thePrev = (prev == 1) ? '' : '<span>Previous</span>'
+					page_string = page_string + thePrev
+					if ((page < total_num_pages - start_offset) && (total_num_pages > start + range)) {
+						for (var x = start; x <= start + range; x++) {
+							if (x > 0) {
+								page_string = page_string + '<span class=' + (page == x ? 'active' : '') + '>' + (x < 10 ? '0' : '') + x + '</span>';
+							}
+						}
+					}
+					else {
+						for (var x = total_num_pages - range; x <= total_num_pages; x++) {
+							if (x > 0) {
+								page_string = page_string + '<span class=' + (page == x ? 'active' : '') + '>' + (x < 10 ? '0' : '') + x + '</span>';
+							}
+						}
+					}
+					let theNext = (next > total_num_pages) ? '</div>' : '<span>Next</span></div>'
+					page_string = page_string + theNext
+					document.getElementById("paging").innerHTML = page_string
+					document.getElementById("paging").style.display = "block"
+					document.querySelectorAll('.pagination span').forEach((item) => {
+						item.addEventListener('click', (e) => {
+							if (e.target.innerText == "Previous") {
+								getSaleByDate(prev);
+							}
+							else if (e.target.innerText == "Next") {
+								if (next > total_num_pages) {
+									next = total_num_pages
+								}
+								getSaleByDate(next)
+							}
+							else {
+								getSaleByDate(parseInt(e.target.innerText))
+							}
+							window.scrollTo({ top: 0 });
+						});
+					})
+				});
+		}
+		/*
+			This function accepts an array of the column headings
+			and create a row to be added to the table in with the 
+			column heading, and reference to the thead of the table
+			*/
+		function makeTableHeader(coloumns) {
+			let header_row = document.createElement('tr');
+			coloumns.forEach(item => {
+				let heading = document.createElement('th');
+				heading.innerHTML = item;
+				header_row.appendChild(heading);
+			})
+			thead.appendChild(header_row);
+		}
+		/*
+		This function accepts an array of the row data
+		and create a row to be added to the table in with the 
+		record data
+		*/
+		function makeTableDataRow(row_data) {
+			let data_row = document.createElement('tr')
+			row_data.forEach(item => {
+				let row = document.createElement('td')
+				if (item == '*') {
+					row.innerHTML = '<i class="fa-solid fa-eye"></i>'
+					row.addEventListener("click", () => {
+						let formData = new FormData()
+						formData.append('date', row_data[0])
+						fetch("php/view_transactions_details_by_date.php", {
+							method: 'post',
+							body: formData
+						}).then((res) => res.json())
+							.then((results) => {
+								if (results.hasOwnProperty("status")) {
+									alert("No Data Found")
+									return
+								}
+								document.querySelector("body").style.overflow = "hidden"
+								document.querySelector(".modal").style.display = "block"
+								let trans = '<table><thead><tr><th>Sales No</th><th>Product Name</th><th>Amt Sold</th></tr></thead><tbody>'
+								let xcolor = ""
+								const colors = ['#fff2e6', '#e6f9ff', '#ecffe6', '#ffe6f7', '#e6f2ff', '#fff2e6', '#f9dbdb', '#ecf9f2']
+								let x = -1;
+								let num = 0;
+								results.forEach((element, key) => {
+									if (element.salesno != num) {
+										num = element.salesno
+										x++
+										if (x > 7) {
+											x = x % 8
+										}
+									}
+									xcolor = `style="background-color:${colors[x]};"`
+									trans = trans + `<tr ${xcolor}><td>${element.salesno}</td><td>${element.items.ProdName}</td><td>${element.items.AmtSold}</td></tr>`
+								})
+								trans = trans + `</tbody></table>`
+								document.getElementById("trans_table").innerHTML = trans
+								document.getElementById("trans_table").scrollTop = 0
+								document.getElementById("thedate").innerHTML =
+									new Date(row_data[0]).toLocaleDateString('en-US', {
+										timeZone: 'UTC',
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric'
+									})
+
+							})
+					})
+
+				} else {
+					row.innerHTML = item
+				}
+				data_row.appendChild(row)
+			})
+			tbody.appendChild(data_row)
+		}
+		/*
+		This function accepts a html element and it removes all children
+		that are in the element
+		*/
+		function removeAllChildNodes(parent) {
+			while (parent.firstChild) parent.removeChild(parent.firstChild);
+		}
+		document.getElementById("close").addEventListener('click', () => {
+			document.querySelector("body").style.overflow = "auto"
+			document.querySelector(".modal").style.display = "none"
+		})
+	</script>
+</body>
+
+</html>

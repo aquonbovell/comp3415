@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" type="text/css" href="css/mystyle.css">
+	<script src="https://kit.fontawesome.com/d2d2d866bf.js" crossorigin="anonymous"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	<title>Sales by Product Code</title>
+	<style>
+		#pcode {
+			border-right: 1px solid #ccc;
+			border-radius: 4px;
+			min-width: 35%;
+		}
+		.btn {
+			padding: 10px !important;
+		}
+	</style>
+</head>
+
+<body>
+	<main>
+	<img src="img/uwi.png">
+	<div id="title">			
+		<div>
+			<i class="fa-solid fa-sitemap"></i>
+			<label>Sales for Product Code</label>
+		</div>
+		<div class="help-modal">
+			<i class="fa-solid fa-circle-info"></i>
+			<div class="help">
+				This screen is used to display all the sales of the specified product.
+			</div>
+		</div>	
+	</div>
+	<div class="menu">
+		<ul>
+			<li><a href="product.html"><i class="fa-solid fa-pen-to-square"></i>&nbsp;&nbsp;Product Data Entry Screen</a></li>
+			<li><a href="pos.html"><i class="fa-sharp fa-solid fa-cash-register"></i>&nbsp;&nbsp;Point of Sale Screen</a></li>
+			<li><a href="product_by_vendor.html"><i class="fa-solid fa-list"></i>&nbsp;&nbsp;Product by Vendor Search</a></li>
+			<li><a href="product_price_range.html"><i class="fa-solid fa-sliders"></i>&nbsp;&nbsp;Product Price Range Search</a></li>
+			<li><a href="sales_by_product.html" class="shown"><i class="fa-solid fa-sitemap"></i>&nbsp;&nbsp;Sales of Specific Product</a></li>
+			<li><a href="total_sales_by_date.html"><i class="fa-regular fa-chart-bar"></i>&nbsp;&nbsp;Total Sales by Date</a></li>
+			<li><a href="product_sold_on_date.html"><i class="fa-solid fa-bezier-curve"></i>&nbsp;&nbsp;Products Sold on Date</a></li>
+			<li><a href="best_selling_products.html"><i class="fa-solid fa-recycle"></i>&nbsp;&nbsp;Best Selling Products</a></li>
+			<li><a href="other_products_sold.html"><i class="fa-solid fa-right-left"></i>&nbsp;&nbsp;Other Products Sold With</a></li>
+		</ul>
+	</div>
+	<div class="container">
+		<div class="row">
+				<label for="pcode">Product Code</label>
+				<input type="text" id="pcode" name="pcode" autocomplete="off" autocorrect="off" spellcheck="false" autofocus>
+				<input type="button" value="Search" class="btn" id="sBtn" onclick="getSaleByProduct(1)">
+		</div>
+		<div id="xpname"></div>
+		<div class="row">
+			<div id="mytable"></div>
+		</div>
+		<div class="row">
+			<div id="paging"></div>
+		</div>
+	</div>
+	</main>
+	<script>
+		const table_div = document.querySelector("#mytable")
+		let table = document.createElement('table');
+		let thead = document.createElement('thead');
+		let tbody = document.createElement('tbody');
+		table.appendChild(thead);
+		table.appendChild(tbody);
+		var limit = 20;
+		function getSaleByProduct(page) {
+			var pcode = document.getElementById('pcode').value;
+			let formData = new FormData()
+			formData.append('pcode', pcode)
+			formData.append('limit', limit)
+			formData.append('page', page)
+			fetch("php/sales_by_product.php", {
+				method: 'post',
+				body: formData
+			}).then((res) => res.json())
+				.then((results) => {
+					removeAllChildNodes(thead)
+					removeAllChildNodes(tbody)
+					if (!results.hasOwnProperty("status")) {
+						makeTableHeader(["Sales Date", "Amount Sold", "Sales Total"])
+						results.forEach((element) => {
+							let saleDate = new Date(element.date).toLocaleDateString('en-US',{
+								timeZone: 'UTC',
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric'
+							})
+							makeTableDataRow([saleDate, element.count, element.subTotal])
+						});
+						document.querySelector("#xpname").innerHTML = ""
+						table_div.appendChild(table)
+						paging(page);						
+					}
+					else {
+						document.querySelector("#xpname").innerHTML = "This product was never sold, or it does not exist"
+						document.getElementById("paging").innerHTML = ""
+					}
+				})
+		}
+		function paging(page) {
+			if (isNaN(page)) {
+				page = 1;
+			}
+			let next = (parseInt(page) + 1);
+			let prev = ((parseInt(page) - 1) < 1) ? 1 : (parseInt(page) - 1);
+			let range = 10; // number of pages to display in the navigation bar	
+			let start_movement = 7; //starts shifting page numbers in navigation bar after this amount
+			let start_offset = Math.ceil(range / 2); //start point of navigation bar from current page	
+			let pcode = document.getElementById('pcode').value;
+			let formData = new FormData()
+			formData.append('pcode', pcode)
+			fetch("php/sales_by_product_count.php", {
+				method: 'post',
+				body: formData
+			}).then((res) => res.json())
+				.then((results) => {
+					let total_num_pages = Math.ceil(results.total / limit);
+					thesearch(pcode,page,total_num_pages)
+					let page_string = ''
+					page_string = "<div class='pagination'>"
+					if (page >= start_movement) {
+						start = page - start_offset;
+					}
+					else {
+						start = 1;
+					}
+					let thePrev = (prev == 1) ? '' : '<span>Previous</span>'
+					page_string = page_string + thePrev;
+					if ((page < total_num_pages - start_offset) && (total_num_pages > start + range)) {
+						for (var x = start; x <= start + range; x++) {
+							if (x > 0) {
+								page_string = page_string + '<span class=' + (page == x ? 'active' : '') + '>' + (x < 10 ? '0' : '') + x + '</span>';
+							}
+						}
+					}
+					else {
+						for (var x = total_num_pages - range; x <= total_num_pages; x++) {
+							if (x > 0) {
+								page_string = page_string + '<span class=' + (page == x ? 'active' : '') + '>' + (x < 10 ? '0' : '') + x + '</span>';
+							}
+						}
+					}
+					let theNext = (next > total_num_pages) ? '</div>' : '<span>Next</span></div>'
+					page_string = page_string + theNext
+					document.getElementById("paging").innerHTML = page_string;
+					document.getElementById("paging").style.display = "block"
+					document.querySelectorAll('.pagination span').forEach((item) => {
+						item.addEventListener('click', (e) => {
+							if (e.target.innerText == "Previous") {
+								getSaleByProduct(prev);
+							}
+							else if (e.target.innerText == "Next") {
+								if(next > total_num_pages){
+									next = total_num_pages
+								}								
+								getSaleByProduct(next)
+							}
+							else {
+								getSaleByProduct(parseInt(e.target.innerText))
+							}
+							window.scrollTo({ top: 0 });
+						});
+					})
+				})
+		}
+		function thesearch(code,pageno,tota_pages) {
+			let formData = new FormData();
+			formData.append('code', code)
+			fetch("php/getProduct.php", {
+				method: 'post',
+				body: formData
+			})
+				.then(res => res.json())
+				.then((data) => {
+					if (data.Name != "") {
+						document.getElementById('xpname').innerHTML = `<div>${data.Name}</div><div>Page ${pageno} of ${tota_pages}</div>`
+					}
+					else{
+						document.getElementById('xpname').innerHTML = ""
+					}
+				})
+			// $.post("getproduct.php", { m_code: code }, function (data) {
+			// 	var parsedJSON = JSON.parse(data);
+			// 	if (parsedJSON.Name != '') {
+			// 		document.getElementById('pname').innerHTML = parsedJSON['Name'];
+			// 	}
+			// });
+
+		}
+
+		// Get the input field
+		var input = document.getElementById("pcode");
+		// Execute a function when the user presses a key on the keyboard
+		input.addEventListener("keypress", (event) => {
+			// If the user presses the "Enter" key on the keyboard
+			if (event.key === "Enter") {
+				// Cancel the default action, if needed
+				event.preventDefault();
+				// Trigger the button element with a click
+				document.getElementById("sBtn").click();
+			}
+		});
+
+		/*
+			This function accepts an array of the column headings
+			and create a row to be added to the table in with the 
+			column heading, and reference to the thead of the table
+			*/
+		function makeTableHeader(coloumns) {
+			let header_row = document.createElement('tr');
+			coloumns.forEach(item => {
+				let heading = document.createElement('th');
+				heading.innerHTML = item;
+				header_row.appendChild(heading);
+			})
+			thead.appendChild(header_row);
+		}
+		/*
+		This function accepts an array of the row data
+		and create a row to be added to the table in with the 
+		record data
+		*/
+		function makeTableDataRow(row_data) {
+			let data_row = document.createElement('tr');
+			row_data.forEach(item => {
+				let row = document.createElement('td');
+				row.innerHTML = item;
+				data_row.appendChild(row);
+			})
+			tbody.appendChild(data_row);
+		}
+		/*
+		This function accepts a html element and it removes all children
+		that are in the element
+		*/
+		function removeAllChildNodes(parent) {
+			while (parent.firstChild) parent.removeChild(parent.firstChild);
+		}
+	</script>
+</body>
+
+</html>

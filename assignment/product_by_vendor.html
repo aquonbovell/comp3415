@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" type="text/css" href="css/mystyle.css">
+	<script src="https://kit.fontawesome.com/d2d2d866bf.js" crossorigin="anonymous"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	<title>Product by Vendor</title>
+	<style>
+		input[type="radio"],.radios label{
+			cursor: pointer;
+		}
+	</style>
+</head>
+
+<body onload="getUniqueVendors()">
+	<main>
+		<img src="img/uwi.png">
+		<div id="title">			
+			<div>
+				<i class="fa-solid fa-list"></i>
+				<label>Product by Vendor</label>	
+			</div>
+			<div class="help-modal">
+				<i class="fa-solid fa-circle-info"></i>
+				<div class="help">
+					This screen is used to list products bought from the selected vendor, here we can select where the vendor appears in the list of vendors. We have a list of vendors due to the fact that a product can possible be bought from multiple vendors.
+				</div>
+			</div>
+		</div>
+		<div class="menu">
+			<ul>
+				<li><a href="product.html"><i class="fa-solid fa-pen-to-square"></i>&nbsp;&nbsp;Product Data Entry Screen</a></li>
+				<li><a href="pos.html"><i class="fa-sharp fa-solid fa-cash-register"></i>&nbsp;&nbsp;Point of Sale Screen</a></li>
+				<li><a href="product_by_vendor.html" class="shown"><i class="fa-solid fa-list"></i>&nbsp;&nbsp;Product by Vendor Search</a></li>
+				<li><a href="product_price_range.html"><i class="fa-solid fa-sliders"></i>&nbsp;&nbsp;Product Price Range Search</a></li>
+				<li><a href="sales_by_product.html"><i class="fa-solid fa-sitemap"></i>&nbsp;&nbsp;Sales of Specific Product</a></li>
+				<li><a href="total_sales_by_date.html"><i class="fa-regular fa-chart-bar"></i>&nbsp;&nbsp;Total Sales by Date</a></li>
+				<li><a href="product_sold_on_date.html"><i class="fa-solid fa-bezier-curve"></i>&nbsp;&nbsp;Products Sold on Date</a></li>
+				<li><a href="best_selling_products.html"><i class="fa-solid fa-recycle"></i>&nbsp;&nbsp;Best Selling Products</a></li>
+				<li><a href="other_products_sold.html"><i class="fa-solid fa-right-left"></i>&nbsp;&nbsp;Other Products Sold With</a></li>
+			</ul>
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="ven_select">
+					<div class="ven_info">
+						<label for="vendor">Vendor Name :</label>
+						<select id="vendor" name="vendor"></select>
+						<input type="button" value="Search" class="btn" id="ven_submit" onclick="getProdVendors(1)">
+					</div>
+					<div class="page_no" id="page_no"></div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="radios">
+					<div>
+						<input type="radio" name="position" value="-1" checked="checked" id="Any"> <label for="Any">Anywhere</label> 
+					</div>
+					<div>
+						<input type="radio" name="position" value="0" id="First"> <label for="First">First</label> 
+					</div>
+					<div>
+						<input type="radio" name="position" value="1" id="Second"> <label for="Second">Second</label>
+					</div>
+
+					<div>
+						<input type="radio" name="position" value="2" id="Third"> <label for="Third">Third</label>
+					</div>
+					<div>
+						<input type="radio" name="position" value="3" id="Fourth"> <label for="Fourth">Fourth</label>
+					</div>
+					<div>
+						<input type="radio" name="position" value="4" id="Fifth"> <label for="Fifth">Fifth</label>
+					</div>
+					<div>
+						<input type="radio" name="position" value="5" id="Sixth"> <label for="Sixth">Sixth</label>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div id="mytable"></div>
+			</div>
+			<div class="row">
+				<div id="paging"></div>
+			</div>
+		</div>
+	</main>
+	<script>
+		const table_div = document.querySelector("#mytable")
+		let table = document.createElement('table');
+		let thead = document.createElement('thead');
+		let tbody = document.createElement('tbody');
+		table.appendChild(thead);
+		table.appendChild(tbody);
+		var limit = 20;
+		function getProdVendors(page) {
+			var vendor = document.getElementById('vendor').value;
+			var position = displayRadioValue();
+			let formData = new FormData()
+			formData.append('vendor', vendor)
+			formData.append('position', position)
+			formData.append('page', page)
+			formData.append('limit', limit)
+			fetch("php/product_by_vendor.php", {
+				method: 'post',
+				body: formData
+			}).then((res) => res.json())
+				.then((results) => {
+					removeAllChildNodes(thead)
+					removeAllChildNodes(tbody)
+					if (!results.hasOwnProperty("status")) {
+						makeTableHeader(["Code", "Name", "Cost", "Price", "Onhand", "Vendors"])
+						results.forEach((element) => {
+							makeTableDataRow([element.code, element.name, element.cost, element.price, element.onhand, element.vendors])
+						});
+						table_div.appendChild(table)
+						paging(page);						
+					}
+				})
+		}
+		function displayRadioValue() {
+			var ele = document.getElementsByName('position');
+			for (i = 0; i < ele.length; i++) {
+				if (ele[i].checked)
+					return ele[i].value;
+			}
+		}
+		function paging(page) {
+			if (isNaN(page)) {
+				page = 1;
+			}
+			let next = (parseInt(page) + 1)
+			let prev = ((parseInt(page) - 1) < 1) ? 1 : (parseInt(page) - 1)
+			let range = 10; // number of pages to display in the navigation bar	
+			let start_movement = 7; //starts shifting page numbers in navigation bar after this amount
+			let start_offset = Math.ceil(range / 2); //start point of navigation bar from current page	
+			let vendor = document.getElementById('vendor').value;
+			let position = displayRadioValue();
+			let formData = new FormData()
+			formData.append('vendor', vendor)
+			formData.append('position',position)
+			fetch("php/product_by_vendor_count.php", { 
+				method: 'post',
+				body: formData
+			}).then((res) => res.json())
+			.then((results) => {
+				if (results.hasOwnProperty("status")){
+					return
+				}
+				let total_num_pages = Math.ceil(results.count / limit);
+				document.getElementById("page_no").innerHTML = `Page ${page} of ${total_num_pages}`
+				let page_string = ''
+				page_string = "<div class='pagination'>"
+				if (page >= start_movement) {
+					start = page - start_offset;
+				}
+				else {
+					start = 1;
+				}
+				let thePrev = (prev == 1) ? '' : '<span>Previous</span>'
+				page_string = page_string + thePrev
+				if ((page < total_num_pages - start_offset) && (total_num_pages > start + range)) {
+					for (var x = start; x <= start + range; x++) {
+						if (x > 0) {
+							page_string = page_string + '<span class=' + (page == x ? 'active' : '') + '>' + (x < 10 ? '0' : '') + x + '</span>';
+						}
+					}
+				}
+				else {
+					for (var x = total_num_pages - range; x <= total_num_pages; x++) {
+						if (x > 0) {
+							page_string = page_string + '<span class=' + (page == x ? 'active' : '') + '>' + (x < 10 ? '0' : '') + x + '</span>';
+						}
+					}
+				}
+				let theNext = (next > total_num_pages) ? '</div>' : '<span>Next</span></div>'
+				page_string = page_string + theNext
+				document.getElementById("paging").innerHTML = page_string;
+				document.getElementById("paging").style.display = "block"
+				document.querySelectorAll('.pagination span').forEach((item) => {
+						item.addEventListener('click', (e) => {
+							if (e.target.innerText == "Previous") {
+								getProdVendors(prev);
+							}
+							else if (e.target.innerText == "Next") {
+								if(next > total_num_pages){
+									next = total_num_pages
+								}								
+								getProdVendors(next)
+							}
+							else {
+								getProdVendors(parseInt(e.target.innerText))
+							}
+							window.scrollTo({ top: 0 });
+						});
+					})
+			})
+		}		
+		function getUniqueVendors() {
+			fetch("php/getUniqueVendors.php")
+				.then((res) => res.json())
+				.then((results) => {
+					let select = document.getElementById('vendor')
+					select.options[0] = new Option("");
+					results.forEach((element) => {
+						select.options[select.options.length] = new Option(element);
+					});
+				})
+		}
+		/*
+			This function accepts an array of the column headings
+			and create a row to be added to the table in with the 
+			column heading, and reference to the thead of the table
+			*/
+		function makeTableHeader(coloumns) {
+			let header_row = document.createElement('tr');
+			coloumns.forEach(item => {
+				let heading = document.createElement('th');
+				heading.innerHTML = item;
+				header_row.appendChild(heading);
+			})
+			thead.appendChild(header_row);
+		}
+		/*
+		This function accepts an array of the row data
+		and create a row to be added to the table in with the 
+		record data
+		*/
+		function makeTableDataRow(row_data) {
+			let data_row = document.createElement('tr');
+			row_data.forEach(item => {
+				let row = document.createElement('td');
+				row.innerHTML = item;
+				data_row.appendChild(row);
+			})
+			tbody.appendChild(data_row);
+		}
+		/*
+		This function accepts a html element and it removes all children
+		that are in the element
+		*/
+		function removeAllChildNodes(parent) {
+			while (parent.firstChild) parent.removeChild(parent.firstChild);
+		}
+	</script>
+</body>
+
+</html>

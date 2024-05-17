@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Products</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" type="text/css" href="css/mystyle.css">
+	<script src="https://kit.fontawesome.com/d2d2d866bf.js" crossorigin="anonymous"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+</head>
+
+<body onload="first_last()">
+	<main>
+		<img src="img/uwi.png">
+		<div id="title">
+			<div>
+				<i class="fa-solid fa-pen-to-square"></i>
+				<label>Product Screen</label>
+			</div>			
+			<div class="help-modal">
+				<i class="fa-solid fa-circle-info"></i>
+				<div class="help">
+					This screen is used to add, update or delete products.
+				</div>
+			</div>
+		</div>
+		<div class="menu">
+			<ul>
+				<li><a href="product.html" class="shown"><i class="fa-solid fa-pen-to-square"></i>&nbsp;&nbsp;Product Data Entry Screen</a></li>
+				<li><a href="pos.html"><i class="fa-sharp fa-solid fa-cash-register"></i>&nbsp;&nbsp;Point of Sale Screen</a></li>
+				<li><a href="product_by_vendor.html"><i class="fa-solid fa-list"></i>&nbsp;&nbsp;Product by Vendor Search</a></li>
+				<li><a href="product_price_range.html"><i class="fa-solid fa-sliders"></i>&nbsp;&nbsp;Product Price Range Search</a></li>
+				<li><a href="sales_by_product.html"><i class="fa-solid fa-sitemap"></i>&nbsp;&nbsp;Sales of Specific Product</a></li>
+				<li><a href="total_sales_by_date.html"><i class="fa-regular fa-chart-bar"></i>&nbsp;&nbsp;Total Sales by Date</a></li>
+				<li><a href="product_sold_on_date.html"><i class="fa-solid fa-bezier-curve"></i>&nbsp;&nbsp;Products Sold on Date</a></li>
+				<li><a href="best_selling_products.html"><i class="fa-solid fa-recycle"></i>&nbsp;&nbsp;Best Selling Products</a></li>
+				<li><a href="other_products_sold.html"><i class="fa-solid fa-right-left"></i>&nbsp;&nbsp;Other Products Sold With</a></li>
+			</ul>
+		</div>
+		<div class="container">
+			<div class="group_row">
+				<div>
+					<label>Product Code:</label>
+				</div>
+				<div>
+					<div class="in_search">
+						<input type="text" id="pcode" name="pcode" onfocusout="search(this.value)" autofocus
+							autocomplete="off" autocorrect="off" spellcheck="false">
+						<button class="s_btn" onclick="product_search()" name="search"><i
+								class="fa fa-search"></i></button>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div id="myModal" class="modal">
+					<!-- Modal content -->
+					<div class="modal-content1">
+						<div id="close">X</div>
+						<div class="row">
+							<label for="psearch">Search name:</label>
+							<input type="text" id="psearch" name="psearch" autocomplete="off" autocorrect="off"
+								spellcheck="false">
+						</div>
+						<div class="row">
+							<div id="inst_search">LEFT MOUSE click on your desired product <b>OR</b> use the UP & DOWN
+								arrow
+								to go to desired product, and then press the ENTER key to select the product</div>
+						</div>
+						<div class="row">
+							<div id="pro_table"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="group_row">
+				<div>
+					<label for="pname">Product Name:</label>
+				</div>
+				<div>
+					<input type="text" id="pname" name="pname" class="fullText" autocomplete="off" autocorrect="off"
+						spellcheck="false">
+				</div>
+			</div>
+			<div class="group_row">
+				<div>
+					<label for="pcost">Product Cost:</label>
+				</div>
+				<div>
+					<input type="text" id="pcost" name="pcost" autocomplete="off" autocorrect="off">
+				</div>
+			</div>
+			<div class="group_row">
+				<div>
+					<label for="pprice">Product Price:</label>
+				</div>
+				<div>
+					<input type="text" id="pprice" name="pprice" autocomplete="off" autocorrect="off">
+				</div>
+			</div>
+			<div class="group_row">
+				<div>
+					<label for="onhand">Product OnHand:</label>
+				</div>
+				<div>
+					<input type="text" id="onhand" name="onhand" autocomplete="off" autocorrect="off">
+				</div>
+			</div>
+			<div class="group_row">
+				<div>
+					<label for="vendors">Product Vendors:</label>
+					<label id="ven">(Comma Separated List)</label>
+				</div>
+				<div>
+					<input type="text" id="vendors" name="vendors" class="fullText" autocomplete="off" autocorrect="off"
+						spellcheck="false">
+				</div>
+			</div>
+			<div class="row">
+				<div id="pro_saveit">
+					<input type="button" value="Save" id="psave" onclick="pro_saveit()" class="btn">
+					<input type="button" value="Cancel" id="pcancel" onclick="pro_cancelit()" class="btn">
+					<input type="button" value="Delete" id="pdelete" onclick="pro_deleteit()" class="btn">
+					<input type="button" value="First" id="first" onclick="pro_first()" class="btn">
+					<input type="button" value="Next" id="next" onclick="pro_next()" class="btn">
+					<input type="button" value="Previous" id="prev" onclick="pro_prev()" class="btn">
+					<input type="button" value="Last" id="last" onclick="pro_last()" class="btn">
+				</div>
+			</div>
+		</div>
+	</main>
+	<script src="js/myScript.js"></script>
+</body>
+
+</html>

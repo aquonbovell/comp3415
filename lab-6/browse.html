@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+      }
+
+      th {
+        background-color: #4d79ff;
+        color: white;
+      }
+
+      td {
+        background-color: white;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 25px;
+      }
+    </style>
+    <title>Browse Catalog</title>
+  </head>
+
+  <body
+    style="
+      background-color: #e0e0d1;
+      padding: 1rem;
+      display: flex;
+      min-width: 30rem;
+      justify-content: center;
+    "
+  >
+    <div
+      style="
+        margin: 1rem;
+        border: thin solid black;
+        padding: 25px;
+        background-color: MediumAquamarine;
+      "
+    >
+      <label>Search Includes:</label><br />
+      <input
+        type="text"
+        id="item"
+        style="padding: 10px; margin-top: 10px"
+        autocomplete="off"
+        autofocus
+      />
+      <input
+        type="button"
+        value="Browse"
+        id="browse"
+        onclick="browse()"
+        style="padding: 10px 25px 10px 25px"
+      /><br /><br />
+      <input type="radio" id="name" name="field" value="1" checked="checked" />
+      <label for="name">Name</label><br />
+      <input type="radio" id="address" name="field" value="2" />
+      <label for="address">Address</label><br />
+      <div id="mytable"></div>
+    </div>
+    <script>
+      const table_div = document.querySelector("#mytable");
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      function browse() {
+        let selected = getRadioValue();
+        var item = document.getElementById("item").value;
+        let formData = new FormData();
+        formData.append("item", item);
+        formData.append("field", selected == 1 ? "name" : "address");
+        fetch("browse.php", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            removeAllChildNodes(thead);
+            removeAllChildNodes(tbody);
+            console.log(data);
+            if (data.status == false) {
+              document.getElementById("mytable").innerHTML =
+                "No records found!!";
+              document.getElementById("mytable").style.color = "red";
+              document.getElementById("mytable").style.fontSize = "20px";
+              document.getElementById("mytable").style.fontWeight = "bold";
+              document.getElementById("mytable").style.textAlign = "center";
+            } else {
+              document.getElementById("mytable").innerHTML = "";
+              document.getElementById("mytable").style.color = "black";
+              document.getElementById("mytable").style.fontSize = "16px";
+              document.getElementById("mytable").style.fontWeight = "normal";
+              document.getElementById("mytable").style.textAlign = "inital";
+              makeTableHeader(["Code", "Name", "Address", "Date of Birth"]);
+              data.forEach((item) => {
+                makeTableDataRow([
+                  item.code,
+                  item.name,
+                  item.address,
+                  item.dob,
+                ]);
+              });
+              table_div.appendChild(table);
+              document.getElementById("item").focus();
+            }
+          })
+          .catch((error) => {
+            removeAllChildNodes(thead);
+            removeAllChildNodes(tbody);
+            makeTableHeader(["Code", "Name", "Address", "Date of Birth"]);
+            table_div.appendChild(table);
+            document.getElementById("item").focus();
+          });
+      }
+      /*
+        This function accepts an array of the column headings
+        and create a row to be added to the table in with the 
+        column heading, and reference to the thead of the table
+			*/
+      function makeTableHeader(coloumns) {
+        let header_row = document.createElement("tr");
+        coloumns.forEach((item) => {
+          let heading = document.createElement("th");
+          heading.innerHTML = item;
+          header_row.appendChild(heading);
+        });
+        thead.appendChild(header_row);
+      }
+      /*
+        This function accepts an array of the row data
+        and create a row to be added to the table in with the 
+        record data
+      */
+      function makeTableDataRow(row_data) {
+        let data_row = document.createElement("tr");
+        row_data.forEach((item) => {
+          let row = document.createElement("td");
+          row.innerHTML = item;
+          data_row.appendChild(row);
+        });
+        tbody.appendChild(data_row);
+      }
+      /*
+        This function accepts a html element and it removes all children
+        that are in the element
+		  */
+      function removeAllChildNodes(parent) {
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+      }
+      /*
+        This function gets the value of the selected radio button
+      */
+      function getRadioValue() {
+        var radios = document.querySelectorAll("input[type=radio]");
+        for (var i = 0, length = radios.length; i < length; i++) {
+          if (radios[i].checked) {
+            return radios[i].value;
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

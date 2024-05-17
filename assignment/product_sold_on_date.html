@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="css/mystyle.css">
+	<script src="https://kit.fontawesome.com/d2d2d866bf.js" crossorigin="anonymous"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <title>Product Sold on Date</title>
+</head>
+<body>
+    <main>
+		<img src="img/uwi.png">
+        <div id="title">            
+			<div>
+				<i class="fa-solid fa-bezier-curve"></i>
+            	<label>Product Sold on Date</label>
+			</div>
+			<div class="help-modal">
+				<i class="fa-solid fa-circle-info"></i>
+				<div class="help">
+					This screen is used to display products sold on the specified date.
+				</div>
+			</div>
+        </div>
+        <div class="menu">
+            <ul>
+				<li><a href="product.html"><i class="fa-solid fa-pen-to-square"></i>&nbsp;&nbsp;Product Data Entry Screen</a></li>
+				<li><a href="pos.html"><i class="fa-sharp fa-solid fa-cash-register"></i>&nbsp;&nbsp;Point of Sale Screen</a></li>
+				<li><a href="product_by_vendor.html"><i class="fa-solid fa-list"></i>&nbsp;&nbsp;Product by Vendor Search</a></li>
+				<li><a href="product_price_range.html"><i class="fa-solid fa-sliders"></i>&nbsp;&nbsp;Product Price Range Search</a></li>
+				<li><a href="sales_by_product.html"><i class="fa-solid fa-sitemap"></i>&nbsp;&nbsp;Sales of Specific Product</a></li>
+				<li><a href="total_sales_by_date.html"><i class="fa-regular fa-chart-bar"></i>&nbsp;&nbsp;Total Sales by Date</a></li>
+				<li><a href="product_sold_on_date.html" class="shown"><i class="fa-solid fa-bezier-curve"></i>&nbsp;&nbsp;Products Sold on Date</a></li>
+				<li><a href="best_selling_products.html"><i class="fa-solid fa-recycle"></i>&nbsp;&nbsp;Best Selling Products</a></li>
+				<li><a href="other_products_sold.html"><i class="fa-solid fa-right-left"></i>&nbsp;&nbsp;Other Products Sold With</a></li>
+			</ul>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div>
+                    <label for="soldDate">Date of Sales:</label>
+                    <input type="date" id="soldDate" name="soldDate" autofocus>
+                    <input type="button" value="Search" class="btn" id="sBtn" onclick="date_search(1)">
+                </div>
+            </div>
+            <div class="row">
+				<div id="mytable"></div>
+			</div>
+			<div class="row">
+				<div>
+					<div id="paging"></div>
+				</div>
+			</div>
+        </div>
+    </main>
+    <script>
+        const table_div = document.querySelector("#mytable")
+		let table = document.createElement('table');
+		let thead = document.createElement('thead');
+		let tbody = document.createElement('tbody');
+		table.appendChild(thead);
+		table.appendChild(tbody);
+		var limit = 20;
+        function date_search(page){
+            let soldDate = document.getElementById('soldDate').value;
+            let formData = new FormData()
+			formData.append('soldDate', soldDate)
+			formData.append('page', page)
+			formData.append('limit', limit)
+			fetch("php/product_sold_on_date.php", {
+				method: 'post',
+				body: formData
+			}).then((res) => res.json())
+				.then((results) => {
+                    removeAllChildNodes(thead)
+					removeAllChildNodes(tbody)
+					if (!results.hasOwnProperty("status")) {
+						makeTableHeader(["Product Code", "Product Name","Unit Price","Amt Sold", "SubTotal"])
+						results.forEach((element) => {
+							makeTableDataRow([element.ProdID, element.ProdName, element.Unit, element.AmtSold, element.SubTotal])
+						});
+						table_div.appendChild(table)					
+					}					
+                })
+        }
+        /*
+			This function accepts an array of the column headings
+			and create a row to be added to the table in with the 
+			column heading, and reference to the thead of the table
+			*/
+		function makeTableHeader(coloumns) {
+			let header_row = document.createElement('tr');
+			coloumns.forEach(item => {
+				let heading = document.createElement('th');
+				heading.innerHTML = item;
+				header_row.appendChild(heading);
+			})
+			thead.appendChild(header_row);
+		}
+		/*
+		This function accepts an array of the row data
+		and create a row to be added to the table in with the 
+		record data
+		*/
+		function makeTableDataRow(row_data) {
+			let data_row = document.createElement('tr');
+			row_data.forEach(item => {
+				let row = document.createElement('td');
+				row.innerHTML = item;
+				data_row.appendChild(row);
+			})
+			tbody.appendChild(data_row);
+		}
+		/*
+		This function accepts a html element and it removes all children
+		that are in the element
+		*/
+		function removeAllChildNodes(parent) {
+			while (parent.firstChild) parent.removeChild(parent.firstChild);
+		}
+    </script>
+</body>
+</html>

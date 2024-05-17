@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>COMP3415 Lab5 - 417002714</title>
+    <link rel="stylesheet" href="mystyle.css" />
+  </head>
+  <body>
+    <main>
+      <div>
+        <div>
+          <label for="objectID">ObjectID:</label>
+          <input
+            type="text"
+            id="objectID"
+            name="objectID"
+            onfocusout="getMovie(this.value)"
+          />
+        </div>
+        <div>
+          <label for="title">Title:</label>
+          <input type="text" id="title" name="title" />
+        </div>
+        <div>
+          <label for="year">Year:</label>
+          <input type="text" id="year" name="year" />
+        </div>
+        <div>
+          <label for="runtime">Runtime:</label>
+          <input type="text" id="runtime" name="runtime" />
+        </div>
+      </div>
+      <div>
+        <img
+          id="img"
+          src="no_poster.png"
+          alt="no-poster"
+          width="100%"
+          height="300px"
+          onclick="showPlot()"
+        />
+      </div>
+      <div class="buttons">
+        <input type="button" value="First" id="first" onclick="get_first()" />
+        <input type="button" value="Next" id="next" onclick="get_next()" />
+        <input type="button" value="Previous" id="prev" onclick="get_prev()" />
+        <input type="button" value="Last" id="last" onclick="get_last()" />
+        <input type="button" value="Cancel" id="cancel" onclick="cancel()" />
+      </div>
+      <p id="previous-msg" class="msg hidden">
+        You are at the first element in the database, no previous data will be
+        returned!!
+      </p>
+      <p id="next-msg" class="msg hidden">
+        You are at the last element in the database, no next data will be
+        returned!!
+      </p>
+      <p id="getMovie-msg" class="msg hidden">
+        No movie found with the given ObjectID!!
+      </p>
+    </main>
+
+    <script>
+      var colors = [
+        "maroon",
+        "green",
+        "orange",
+        "blue",
+        "crimson",
+        "BlueViolet",
+        "DarkGoldenRod",
+        "DarkMagenta",
+        "Fuchsia",
+        "OrangeRed",
+        "Teal",
+        "Red",
+      ];
+      function get_first() {
+        fetch("getFirst.php")
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.hasOwnProperty("status")) {
+              updateTextBoxes(data);
+              document.getElementById("next-msg").classList.add("hidden");
+              document.getElementById("previous-msg").classList.add("hidden");
+            } else {
+              console.log("No data received!");
+            }
+          });
+      }
+      function get_last() {
+        fetch("getLast.php")
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.hasOwnProperty("status")) {
+              updateTextBoxes(data);
+              document.getElementById("next-msg").classList.add("hidden");
+              document.getElementById("previous-msg").classList.add("hidden");
+            } else {
+              console.log("No data received!");
+            }
+          });
+      }
+      function get_next() {
+        document.getElementById("previous-msg").classList.add("hidden");
+        let x = document.getElementById("objectID").value;
+        let formData = new FormData();
+        formData.append("_id", x);
+        fetch("getNext.php", {
+          method: "post",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.hasOwnProperty("status")) {
+              updateTextBoxes(data);
+            } else if (data.status == "no next") {
+              let nextMsg = document.getElementById("next-msg");
+              nextMsg.classList.remove("hidden");
+              setTimeout(() => {
+                nextMsg.classList.add("hidden");
+              }, 3000);
+            } else {
+              console.log("No data received!");
+            }
+          });
+      }
+      function get_prev() {
+        let x = document.getElementById("objectID").value;
+        document.getElementById("next-msg").classList.add("hidden");
+        let formData = new FormData();
+        formData.append("_id", x);
+        fetch("getPrev.php", {
+          method: "post",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.hasOwnProperty("status")) {
+              updateTextBoxes(data);
+            } else if (data.status == "no previous") {
+              let previousMsg = document.getElementById("previous-msg");
+              previousMsg.classList.remove("hidden");
+              setTimeout(() => {
+                previousMsg.classList.add("hidden");
+              }, 3000);
+            } else {
+              console.log("No data received!");
+            }
+          });
+      }
+      function getMovie(id) {
+        document.getElementById("next-msg").classList.add("hidden");
+        document.getElementById("previous-msg").classList.add("hidden");
+        let formData = new FormData();
+        formData.append("_id", id);
+        fetch("getMovie.php", {
+          method: "post",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.hasOwnProperty("status")) {
+              updateTextBoxes(data);
+            } else {
+              let getMovieMsg = document.getElementById("getMovie-msg");
+              getMovieMsg.classList.remove("hidden");
+              setTimeout(() => {
+                getMovieMsg.classList.add("hidden");
+              }, 3000);
+            }
+          });
+      }
+      function cancel() {
+        document.getElementById("next-msg").classList.add("hidden");
+        document.getElementById("previous-msg").classList.add("hidden");
+        document.querySelector("#objectID").value = "";
+        document.querySelector("#title").value = "";
+        document.querySelector("#year").value = "";
+        document.querySelector("#runtime").value = "";
+        document.querySelector("#img").src = "no_poster.png";
+        document.getElementById("img").style.boxShadow =
+          "5px 10px 12px 5px " + colors[Math.floor(Math.random() * 12)];
+      }
+      function updateTextBoxes(data) {
+        document.querySelector("#objectID").value = data?._id.$oid ?? "";
+        document.querySelector("#title").value = data?.title ?? "";
+        document.querySelector("#year").value = data?.year ?? "";
+        document.querySelector("#runtime").value = data?.runtime ?? "";
+        document.querySelector("#img").src = data?.PosterPath
+          ? data?.PosterPath
+          : "no_poster.png";
+        document.getElementById("img").style.boxShadow =
+          "5px 10px 12px 5px " + colors[Math.floor(Math.random() * 12)];
+      }
+    </script>
+  </body>
+</html>

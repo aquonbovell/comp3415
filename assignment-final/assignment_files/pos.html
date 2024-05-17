@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" type="text/css" href="css/mystyle.css" />
+    <script
+      src="https://kit.fontawesome.com/d2d2d866bf.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.4/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.4/vfs_fonts.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <title>Point of Sale</title>
+  </head>
+
+  <body onload="init()">
+    <main>
+      <img src="img/uwi.png" />
+      <div id="title">
+        <div>
+          <i class="fa-sharp fa-solid fa-cash-register"></i>
+          <label>POS Screen</label>
+        </div>
+        <div class="help-modal">
+          <i class="fa-solid fa-circle-info"></i>
+          <div class="help">
+            This screen is used to make sells of the products.
+          </div>
+        </div>
+      </div>
+      <div class="menu">
+        <ul>
+          <li>
+            <a href="product.html"
+              ><i class="fa-solid fa-pen-to-square"></i>&nbsp;&nbsp;Product Data
+              Entry Screen</a
+            >
+          </li>
+          <li>
+            <a href="pos.html" class="shown"
+              ><i class="fa-sharp fa-solid fa-cash-register"></i
+              >&nbsp;&nbsp;Point of Sale Screen</a
+            >
+          </li>
+          <li>
+            <a href="product_by_vendor.html"
+              ><i class="fa-solid fa-list"></i>&nbsp;&nbsp;Product by Vendor
+              Search</a
+            >
+          </li>
+          <li>
+            <a href="product_price_range.html"
+              ><i class="fa-solid fa-sliders"></i>&nbsp;&nbsp;Product Price
+              Range Search</a
+            >
+          </li>
+          <li>
+            <a href="sales_by_product.html"
+              ><i class="fa-solid fa-sitemap"></i>&nbsp;&nbsp;Sales of Specific
+              Product</a
+            >
+          </li>
+          <li>
+            <a href="total_sales_by_date.html"
+              ><i class="fa-regular fa-chart-bar"></i>&nbsp;&nbsp;Total Sales by
+              Date</a
+            >
+          </li>
+          <li>
+            <a href="product_sold_on_date.html"
+              ><i class="fa-solid fa-bezier-curve"></i>&nbsp;&nbsp;Products Sold
+              on Date</a
+            >
+          </li>
+          <li>
+            <a href="best_selling_products.html"
+              ><i class="fa-solid fa-recycle"></i>&nbsp;&nbsp;Best Selling
+              Products</a
+            >
+          </li>
+          <li>
+            <a href="other_products_sold.html"
+              ><i class="fa-solid fa-right-left"></i>&nbsp;&nbsp;Other Products
+              Sold With</a
+            >
+          </li>
+        </ul>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="in_search">
+            <label for="xpcode">Product Code:</label>
+            <input
+              type="text"
+              id="xpcode"
+              name="xpcode"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+              autofocus
+            />
+            <button class="s_btn" onclick="product_search()">
+              <i class="fa fa-search"></i>
+            </button>
+            <label id="pname_nf" style="color: red"></label>
+          </div>
+        </div>
+        <div class="row">
+          <div id="myModal" class="modal">
+            <!-- Modal content -->
+            <div class="modal-content1">
+              <div id="close">X</div>
+              <div class="row">
+                <label for="psearch">Search name:</label>
+                <input
+                  type="text"
+                  id="psearch"
+                  name="psearch"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="row">
+                <div id="inst_search">
+                  LEFT MOUSE click on your desired product <b>OR</b> use the UP
+                  & DOWN arrow to go to desired product, and then press the
+                  ENTER key to select the product
+                </div>
+              </div>
+              <div class="row">
+                <div id="pro_table"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div id="inst">
+            UP/DOWN arrow to go to desired product, LEFT/RIGHT arrow to decrease
+            or increase quantity. DELETE key to remove a product.
+          </div>
+        </div>
+        <div class="row" style="margin-top: 10px">
+          <div class="table-wrapper" id="table"></div>
+        </div>
+        <fieldset>
+          <legend style="margin-inline: 1rem">Checkout</legend>
+          <div style="display: grid; grid-template-columns: repeat(2,1fr); padding-inline:1.25rem; padding-bottom: .75rem">
+            <div style="align-self: center;">
+              <label for="type">Payment Type:</label>
+              <select style="padding:0.5rem 1rem;" id="type">
+                <option value="Cash">Cash</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="Gift Voucher">Gift Voucher</option>
+              </select>
+            </div>
+            <div class="">
+              <label for="tenderedamount">Tendered Amount:</label>
+              <input type="number" id="tenderedamount" name="tenderedamount" />
+            </div>
+          </div>
+        </fieldset>
+        <div class="summary">
+          <div id="summary"></div>
+        </div>
+        <div class="row">
+          <div id="saveit">
+            <input
+              type="button"
+              value="Save Transaction"
+              id="save"
+              onclick="saveit()"
+            />
+            <input
+              type="button"
+              value="Clear Transaction"
+              id="cancel"
+              onclick="cancelit()"
+            />
+            <input
+              type="button"
+              value="Print Transaction"
+              id="print"
+              onclick="printit()"
+            />
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="js/myScript.js"></script>
+  </body>
+</html>
